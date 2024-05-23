@@ -1,0 +1,51 @@
+pipeline {
+    agent any
+    
+    stages {
+        stage('Checkout') {
+            steps {
+                git 'https://xptorepo.git'
+            }
+        }
+        
+        stage('Install dependencies') {
+            steps {
+                sh 'npm install'
+            }
+        }
+        
+        stage('Run tests') {
+            steps {
+                script {
+                    def username = readFile('cypress.env.json').USERNAME
+                    def password = readFile('cypress.env.json').PASSWORD
+                    sh "npm run test -- --env USERNAME='${username}' --env PASSWORD='${password}'"
+                }
+            }
+            
+            post {
+                always {
+                    archiveArtifacts 'cypress/screenshots/**'
+                    archiveArtifacts 'cypress/reports/*.html'
+                }
+            }
+        }
+    }
+    
+    options {
+        timeout(time: 1, unit: 'HOURS')
+    }
+    
+    post {
+        success {
+            mail to: 'xpto@example.com',
+                 subject: "Cypress test pipeline - Success",
+                 body: "Your Cypress tests have been executed successfully"
+        }
+        failure {
+            mail to: 'xpto@example.com',
+                 subject: "Cypress test pipeline - Failure",
+                 body: "There was a failure in executing your Cypress tests"
+        }
+    }
+}

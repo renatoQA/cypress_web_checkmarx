@@ -1,0 +1,33 @@
+name: Cypress Test Pipeline
+
+on:
+  push:
+    branches:
+      - main 
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '18.20.2' 
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run Cypress tests
+        run: npm run test --env USERNAME=${{ secrets.USERNAME }} --env PASSWORD=${{ secrets.PASSWORD }}
+
+      - name: Archive test results
+        uses: actions/upload-artifact@v2
+        with:
+          name: Cypress Artifacts
+          path: |
+            cypress/screenshots/**
+            cypress/reports/**.html
